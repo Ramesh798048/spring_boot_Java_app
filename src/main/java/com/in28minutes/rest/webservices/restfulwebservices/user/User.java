@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 
@@ -24,6 +26,7 @@ public class User {
 	@GeneratedValue
 	private Integer id;
 	
+	@NotNull(message = "Name should not be null")
 	@Size(min=2, message = "Name should have atleast 2 characters")
 	//@JsonProperty("user_name")
 	private String name;
@@ -32,7 +35,7 @@ public class User {
 	//@JsonProperty("birth_date")
 	private LocalDate birthDate;
 	
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonIgnore
 	private List<Post> posts;
  	

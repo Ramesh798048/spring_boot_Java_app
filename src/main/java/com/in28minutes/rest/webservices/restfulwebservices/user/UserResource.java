@@ -41,7 +41,8 @@ public class UserResource {
 	
 	@DeleteMapping("/users/{id}")
 	public void deleteUser(@PathVariable int id) {
-		service.deleteById(id);
+		if (!service.deleteById(id))
+			throw new UserNotFoundException("id:" + id);
 	}
 
 	@PostMapping("/users")

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,19 +49,21 @@ public class UserJpaResource {
 	
 	@DeleteMapping("/jpa/users/{id}")
 	public void deleteUser(@PathVariable int id) {
+		if (!userRepository.existsById(id))
+			throw new UserNotFoundException("id:" + id);
 		userRepository.deleteById(id);
 	}
 
 	
+	@Transactional(readOnly = true)
 	@GetMapping("/jpa/users/{id}/posts")
 	public List<Post> retrievePostsForUser(@PathVariable int id) {
 		Optional<User> user = userRepository.findById(id);
-		
-		if(user.isEmpty())
-			throw new UserNotFoundException("id:"+id);
-		
-		return user.get().getPosts();
 
+		if (user.isEmpty())
+			throw new UserNotFoundException("id:" + id);
+
+		return user.get().getPosts();
 	}
 
 	@PostMapping("/jpa/users")
@@ -77,24 +80,25 @@ public class UserJpaResource {
 	}
 
 
+	@Transactional
 	@PostMapping("/jpa/users/{id}/posts")
 	public ResponseEntity<Object> createPostForUser(@PathVariable int id, @Valid @RequestBody Post post) {
 		Optional<User> user = userRepository.findById(id);
-		
-		if(user.isEmpty())
-			throw new UserNotFoundException("id:"+id);
-		
+
+		if (user.isEmpty())
+			throw new UserNotFoundException("id:" + id);
+
 		post.setUser(user.get());
-		
+		user.get().getPosts().add(post);
+
 		Post savedPost = postRepository.save(post);
-		
+
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
 				.buildAndExpand(savedPost.getId())
-				.toUri();   
+				.toUri();
 
 		return ResponseEntity.created(location).build();
-
 	}
 
 	
